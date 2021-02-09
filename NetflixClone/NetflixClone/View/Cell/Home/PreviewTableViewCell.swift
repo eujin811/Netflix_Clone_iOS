@@ -9,7 +9,7 @@
 import UIKit
 
 protocol PreviewTableViewCellDelegate: class {
-    func didTabPreviewCell(index: Int) -> ()
+    func didTapPreviewCell(index: Int) -> ()
 }
 
 class PreviewTableViewCell: UITableViewCell {
@@ -22,16 +22,11 @@ class PreviewTableViewCell: UITableViewCell {
     private let sectionHeight: CGFloat = 24
     
     private let headerLabel = UILabel()
-    private lazy var previewConllectionView = UICollectionView(frame: .zero, collectionViewLayout: flowLayout)
-//    private let previewConllectionView: UICollectionView = {
-//        let layout = UICollectionViewFlowLayout()
-//        layout.scrollDirection = .horizontal
-//        return UICollectionView(frame: .zero, collectionViewLayout: layout)
-//    }()
+    lazy var previewCollectionView = UICollectionView(frame: .zero, collectionViewLayout: flowLayout)
 
     private var idData = [Int]()
-    private var posterData = [UIImage]()
-    private var titleData = [UIImage]()
+    private var posterData = [String]()
+    private var titleData = [String]()
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -55,15 +50,15 @@ class PreviewTableViewCell: UITableViewCell {
         headerLabel.textColor = UIColor.setNetfilxColor(name: UIColor.ColorAsset.white)
         headerLabel.backgroundColor = .clear
             
-        previewConllectionView.dataSource = self
-        previewConllectionView.delegate = self
-        previewConllectionView.backgroundColor = .clear
+        previewCollectionView.dataSource = self
+        previewCollectionView.delegate = self
+        previewCollectionView.backgroundColor = .clear
         
         
-        previewConllectionView.register(PreviewCollectionViewCell.self, forCellWithReuseIdentifier: PreviewCollectionViewCell.identifier)
+        previewCollectionView.register(PreviewCollectionViewCell.self, forCellWithReuseIdentifier: PreviewCollectionViewCell.identifier)
         
         contentView.addSubview(headerLabel)
-        contentView.addSubview(previewConllectionView)
+        contentView.addSubview(previewCollectionView)
         
        
     }
@@ -79,7 +74,7 @@ class PreviewTableViewCell: UITableViewCell {
             $0.height.equalTo(sectionHeight - headerYMargin)
         }
         
-        previewConllectionView.snp.makeConstraints {
+        previewCollectionView.snp.makeConstraints {
             $0.top.equalTo(headerLabel.snp.bottom)
             $0.bottom.leading.trailing.equalToSuperview()
         }
@@ -87,20 +82,13 @@ class PreviewTableViewCell: UITableViewCell {
         
   
     //MARK: - configure
-    func configure(id: [Int], posters: [UIImage], titleImages: [UIImage]) {
-//    func configure(id: [Int], poster: [String], titleImage: [String?]) {
-//        var posters = [UIImage]()
-//        var titleImages = [UIImage]()
-//
-//        poster.forEach { posters.append(UIImage(named: $0)!) }
-//        titleImage.forEach { titleImages.append(UIImage(named: $0 ?? "")!) }
+    func configure(id: [Int], posters: [String], titleImages: [String]) {
         
         self.idData = id
         self.posterData = posters
         self.titleData = titleImages
-        print("=======preview Configure  idData \(idData.count), posterData \(posterData.count), titleImage \(titleImages)")
         
-        previewConllectionView.reloadData()
+        previewCollectionView.reloadData()
     }
 
 }
@@ -112,7 +100,7 @@ extension PreviewTableViewCell: UICollectionViewDataSource {
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = previewConllectionView.dequeueReusableCell(withReuseIdentifier: PreviewCollectionViewCell.identifier, for: indexPath) as! PreviewCollectionViewCell
+        let cell = previewCollectionView.dequeueReusableCell(withReuseIdentifier: PreviewCollectionViewCell.identifier, for: indexPath) as! PreviewCollectionViewCell
         
         cell.configure(color: .red, poster: posterData[indexPath.row], title: titleData[indexPath.row])
         
@@ -123,8 +111,10 @@ extension PreviewTableViewCell: UICollectionViewDataSource {
 }
 
 extension PreviewTableViewCell: UICollectionViewDelegateFlowLayout {
-    
-    
+//    func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+//        collectionView.reloadInputViews()
+//    }
+
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
         let inset: CGFloat = 5
         return UIEdgeInsets(top: 0, left: inset, bottom: inset, right: inset)
@@ -144,15 +134,15 @@ extension PreviewTableViewCell: UICollectionViewDelegateFlowLayout {
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let cellWidth = round(collectionView.frame.width / 3.5)
-        let cellHeight = round(collectionView.frame.height - (15 * 2))
-        
+//        let cellWidth = round(collectionView.frame.width / 3.5)
+//        let cellHeight = round(collectionView.frame.height - (15 * 2))
 
-        return CGSize(width: cellWidth, height: cellHeight)
+//        return CGSize(width: cellWidth, height: cellHeight)
+        return CGSize(width: 107, height: 128)
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        delegate?.didTabPreviewCell(index: indexPath.row)
+        delegate?.didTapPreviewCell(index: indexPath.row)
     }
 }
 

@@ -16,7 +16,7 @@ struct HomeContent: Codable {
     let recommendContents: [RecommendContent]
     let previewContents: [PreviewContent]
     let watchingVideo: [WatchVideo]
-        
+    
     private enum CodingKeys: String, CodingKey {
         case topContent = "top_contents"
         case adContent = "ad_contents"
@@ -27,6 +27,15 @@ struct HomeContent: Codable {
     }
 }
 
+struct CategoryContent: Codable {
+    let topContent: TopConent
+    let similarContent: [RecommendContent]
+    
+    private enum CodingKeys: String, CodingKey {
+        case topContent = "contents"
+        case similarContent = "similar_contents"
+    }
+}
 
 
 
@@ -37,26 +46,14 @@ struct TopConent: Codable {
     let logoImageURL: String
     let categories: [String]
     let rating: String          // 관람가
-    let selectedFlag: Bool
-    
-    
-//    let titleEnglish: String
-//    let likeFlag: Bool
-    //    let summary: String         // 줄거리
-    //    let timeLength: String
-    //    let pubYear: String         // 개봉일
-    //    let previewVideo: String
-    //    let actors: [String]
-    //    let directors: [String]
-    //    let videos: [String]
+    var selectedFlag: Bool
     
     
     private enum CodingKeys: String, CodingKey {
         case id
         case title = "contents_title"
-//        case titleEnglish = "contents_title_english"
+        //        case titleEnglish = "contents_title_english"
         case imageURL = "contents_image"
-        
         case logoImageURL = "contents_logo"
         case rating = "contents_rating"
         case selectedFlag = "is_select"
@@ -82,7 +79,7 @@ struct ADContent: Codable {
     let timeLength: String
     let pubYear: String
     let previewVideoURL: String
-    let selected: Bool
+    var selected: Bool
     //    let summary: String
     //    let imageString: String
     //    let logoString: String
@@ -92,7 +89,7 @@ struct ADContent: Codable {
     //    let videos: [String]
     //    let likeFlag: Bool
     
-
+    
     private enum CodingKeys: String, CodingKey {
         case id
         case title = "contents_title"
@@ -125,7 +122,7 @@ struct RecommendContent: Codable {
         case id
         case title = "contents_title"
         case imageURL = "contents_image"
-
+        
     }
 }
 
@@ -138,6 +135,11 @@ struct PreviewContent: Codable {
     let logoURL: String
     let poster: String
     let videos: [Video]
+    let categories: [String]
+    let isSelect: Bool
+    var genre: String {
+        categories.joined(separator: " ・ ")
+    }
     
     private enum CodingKeys: String, CodingKey {
         case id
@@ -146,13 +148,15 @@ struct PreviewContent: Codable {
         case logoURL = "contents_logo"
         case poster = "contents_image"
         case videos
+        case categories
+        case isSelect = "is_select"
     }
 }
 
 
 struct WatchVideo: Codable {
-    let id: Int
-    let video: Video
+    let id: Int?
+    let video: Video?
     let playTime: Int
     let videoLength: Int
     let poster: String
@@ -167,15 +171,17 @@ struct WatchVideo: Codable {
         case contentId = "contents_id"
     }
     
-  
+    
 }
 
 struct Video: Codable {
-      let id: Int
-      let videoURL: String
-      
-      private enum CodingKeys: String, CodingKey {
-          case id
-          case videoURL = "video_url"
-      }
-  }
+    let id: Int
+    let videoURL: String
+    
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case videoURL = "video_url"
+    }
+}
+
+

@@ -7,10 +7,13 @@
 //
 
 import UIKit
+import Kingfisher
+
 protocol WatchContentsCollectionViewCellDelegate: class {
-    func didTabWatchContentInfo(contentId: Int) -> ()
-    func didTabWatchPlay() -> ()
+    func didTapWatchContentInfo(contentId: Int) -> ()
+    func didTapWatchPlay(contentID: Int) -> ()
 }
+
 class WatchContentsCollectionViewCell: UICollectionViewCell {
     static let identifier = "WatchContentCVC"
     
@@ -27,14 +30,14 @@ class WatchContentsCollectionViewCell: UICollectionViewCell {
     
     private let playButton = UIButton()//UIImageView()
     
-    private var id: Int?
+//    private var id: Int?
     private var contentId: Int?
     
     
     //MARK: initializer
     override init(frame: CGRect) {
         super.init(frame: frame)
-        contentView.backgroundColor = .white
+        contentView.backgroundColor = .clear
         setUI()
         setConstraints()
     }
@@ -54,20 +57,22 @@ class WatchContentsCollectionViewCell: UICollectionViewCell {
         
         infoView.backgroundColor = .black
         
-//        infoButton.image = UIImage(systemName: "info.circle")
         infoButton.setImage(UIImage(systemName: "info.circle"), for: .normal)
         infoButton.tintColor = UIColor.setNetfilxColor(name: UIColor.ColorAsset.netflixLightGray)
-        infoButton.addTarget(self, action: #selector(didTabInfoButton(sender:)), for: .touchUpInside)
+        infoButton.addTarget(self, action: #selector(didTapInfoButton(sender:)), for: .touchUpInside)
         
-//        playButton.image = UIImage(named: "playIcon")//UIImage(systemName: "play.fill")
         playButton.setImage(UIImage(named: "playIcon"), for: .normal)
         playButton.contentMode = .scaleAspectFill
         playButton.backgroundColor = .clear
         playButton.layer.cornerRadius = 40// playView.frame.width / 2
         playButton.clipsToBounds = true
-        playButton.addTarget(self, action: #selector(didTabPlay(sender:)), for: .touchUpInside)
+        playButton.addTarget(self, action: #selector(didTapPlay(sender:)), for: .touchUpInside)
         
-        posterButton.addTarget(self, action: #selector(didTabPlay(sender:)), for: .touchUpInside)
+        posterButton.addTarget(self, action: #selector(didTapPlay(sender:)), for: .touchUpInside)
+        posterButton.backgroundColor = .clear
+        posterButton.layer.masksToBounds = true
+        posterButton.imageView?.contentMode = .scaleToFill
+        
         
         watchTimeLabel.font = timeLabelFont
         watchTimeLabel.textColor = UIColor.setNetfilxColor(name: UIColor.ColorAsset.netflixLightGray)//.lightGray
@@ -129,22 +134,32 @@ class WatchContentsCollectionViewCell: UICollectionViewCell {
     }
     
     //MARK: configure
-    func configure(id: Int, contentId: Int, poster: UIImage, watchTime: String, playMark: Double) {
-        self.id = id
+    func configure(/*id: Int*,*/contentId: Int, poster: URL, watchTime: String, playMark: Double) {
+//        self.id = id
         self.contentId = contentId
-//        posterButton.image = poster
-        posterButton.setImage(poster, for: .normal)
         watchTimeLabel.text = watchTime
 
         progressView.setProgress(Float(playMark), animated: true)   // 길이
+
+        KingfisherManager.shared.retrieveImage(with: poster, completionHandler: {
+            result in
+            switch result {
+            case .success(let imageResult):
+                self.posterButton.setBackgroundImage(imageResult.image, for: .normal)
+            case .failure(let error):
+                print(error)
+            }
+        })
+        
+        
     }
     
-    @objc private func didTabInfoButton(sender: UIButton) {
-        delegate?.didTabWatchContentInfo(contentId: contentId!)
+    
+    @objc private func didTapInfoButton(sender: UIButton) {
+        delegate?.didTapWatchContentInfo(contentId: contentId!)
     }
     
-    @objc private func didTabPlay(sender: UIButton) {
-        delegate?.didTabWatchPlay()
-        print("didTab WatchPlay")
+    @objc private func didTapPlay(sender: UIButton) {
+        delegate?.didTapWatchPlay(contentID: contentId!)
     }
 }

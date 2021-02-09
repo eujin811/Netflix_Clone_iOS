@@ -7,11 +7,12 @@
 //
 
 import UIKit
+import Kingfisher
 
 protocol HomeviewTitleDelegate: class {
-    func didTabHomeTitledibsButton() -> ()
-    func didTabHomeTitlePlayButton() -> ()
-    func didTabHomeTitleContentButton() -> ()
+    func didTapHomeTitledibsButton(id: Int, isEnable: @escaping () -> (), disEnable: () -> (), buttonToogle: (Bool) -> ()) -> ()
+    func didTapHomeTitlePlayButton() -> ()
+    func didTapHomeTitleContentButton() -> ()
 }
 
 class HomeviewTitle: UIView {
@@ -19,7 +20,8 @@ class HomeviewTitle: UIView {
     weak var delegate: HomeviewTitleDelegate?
     
     private let titlePoster = UIImageView()
-    private let gradient = CAGradientLayer()
+    private let topGradient = CAGradientLayer()
+    private let bottomGradient = CAGradientLayer()
     
     private let contentView = UIView()
     private let categoryLabel = UILabel()
@@ -32,6 +34,8 @@ class HomeviewTitle: UIView {
     
     private let titleImage = UIImageView()
     
+    private var id: Int?
+    private var dibs: Bool?
     
     //    private let gradientLayer: CAGradientLayer = {
     //        let gradientLayer = CAGradientLayer()
@@ -61,7 +65,7 @@ class HomeviewTitle: UIView {
         let categoryFont: UIFont = .boldSystemFont(ofSize: 12)
         let fixedFont: UIFont = .systemFont(ofSize: 12)
         
-//        titlePoster.contentMode = .scaleAspectFit
+        //        titlePoster.contentMode = .scaleAspectFit
         titlePoster.contentMode = .scaleAspectFill
         titlePoster.clipsToBounds = true
         
@@ -70,7 +74,7 @@ class HomeviewTitle: UIView {
         
         
         dibsButton.tintColor = textTintColor
-        dibsButton.addTarget(self, action: #selector(didTabdibsButton(sender:)), for: .touchUpInside)
+        dibsButton.addTarget(self, action: #selector(didTapdibsButton(sender:)), for: .touchUpInside)
         
         playButton.setImage(UIImage(systemName: "play.fill"), for: .normal)
         playButton.contentHorizontalAlignment = .center
@@ -80,18 +84,18 @@ class HomeviewTitle: UIView {
         playButton.layer.cornerRadius = 2
         playButton.tintColor = .black
         playButton.backgroundColor = textTintColor
-        playButton.addTarget(self, action: #selector(didTabPlayButton(sender:)), for: .touchUpInside)
+        playButton.addTarget(self, action: #selector(didTapPlayButton(sender:)), for: .touchUpInside)
         
         infoButton.setImage(UIImage(systemName: "info.circle"), for: .normal)
-        infoButton.addTarget(self, action: #selector(didTabInfoButton(sender:)), for: .touchUpInside)
+        infoButton.addTarget(self, action: #selector(didTapInfoButton(sender:)), for: .touchUpInside)
         infoButton.tintColor = textTintColor
         
-                titleImage.contentMode = .scaleAspectFit
-//        titleImage.contentMode = .scaleAspectFill
+        titleImage.contentMode = .scaleAspectFit
+        //        titleImage.contentMode = .scaleAspectFill
         titleImage.clipsToBounds = true
         
         
-        dibsLabel.text = "내가 찜한..."
+        dibsLabel.text = "내가 찜한 콘텐츠"
         dibsLabel.font = fixedFont
         dibsLabel.textColor = textTintColor
         
@@ -102,7 +106,7 @@ class HomeviewTitle: UIView {
         
         
         addSubview(titlePoster)
-
+        
         addSubview(contentView)
         addSubview(titleImage)
         
@@ -122,7 +126,7 @@ class HomeviewTitle: UIView {
         
         let miniButtonWidth: CGFloat = xMargin * 2
         let miniButtonHeight: CGFloat = yMargin * 4
-
+        
         
         titlePoster.snp.makeConstraints {
             $0.top.leading.bottom.trailing.equalToSuperview()
@@ -188,34 +192,36 @@ class HomeviewTitle: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         
-        gradient.startPoint = CGPoint(x: 1, y: 1)
-        gradient.endPoint = CGPoint(x: 1, y: 0.5)
-        
-        gradient.colors = [
+        bottomGradient.startPoint = CGPoint(x: 1, y: 1)
+        bottomGradient.endPoint = CGPoint(x: 1, y: 0.5)
+        bottomGradient.colors = [
             #colorLiteral(red: 0.07841768116, green: 0.07843924314, blue: 0.07841629535, alpha: 1).cgColor,
             #colorLiteral(red: 0, green: 0, blue: 0, alpha: 0).cgColor
         ]
-        gradient.locations = [0, 1]
-        gradient.frame = CGRect(origin: .zero, size: frame.size)
+        bottomGradient.locations = [0, 1]
+        bottomGradient.frame = CGRect(origin: .zero, size: frame.size)
         
-        titlePoster.layer.addSublayer(gradient)
+        
+        topGradient.startPoint = CGPoint(x: 0, y: 0)
+        topGradient.endPoint = CGPoint(x: 0, y: 0.3)
+        topGradient.colors = [
+            #colorLiteral(red: 0.07841768116, green: 0.07843924314, blue: 0.07841629535, alpha: 1).cgColor,
+            #colorLiteral(red: 0, green: 0, blue: 0, alpha: 0).cgColor
+        ]
+        topGradient.locations = [0, 1]
+        topGradient.frame = CGRect(origin: .zero, size: frame.size)
+        
+        
+        titlePoster.layer.addSublayer(bottomGradient)
+        titlePoster.layer.addSublayer(topGradient)
     }
     
     
     
     // MARK: - configure
-    func configure(id: Int, poster: UIImage?, category: [String], dibs: Bool, titleImage: UIImage? /*, url: URL?*/) {
-        
-        var categoryText: String = ""
-        
-        category.forEach {
-            categoryText += $0 + ","
-        }
-        
-        titlePoster.image = poster
-        categoryLabel.text = categoryText
-        
-        self.titleImage.image = titleImage ?? UIImage(named: "darkGray")
+    func configure(id: Int, poster: String, categories: [String], dibs: Bool, titleImage: String /*, url: URL?*/) {
+        self.id = id
+        self.dibs = dibs
         
         if dibs {
             dibsButton.setImage(UIImage(systemName: "checkmark"), for: .normal)
@@ -224,19 +230,57 @@ class HomeviewTitle: UIView {
         }
         
         
+        var categoryText: String = ""
+
+        var forNum = 0
+        for category in categories {
+            forNum += 1
+            categoryText += category
+            if forNum == categories.count {
+                continue
+            }
+            categoryText += " ・ "
+        }
+        
+        titlePoster.kf.setImage(with: URL(string: poster))
+        categoryLabel.text = categoryText
+        self.titleImage.kf.setImage(with: URL(string: titleImage))
+        
     }
     
     //MARK: - action
-    @objc private func didTabdibsButton(sender: UIButton) {
-        delegate?.didTabHomeTitledibsButton()
+    @objc private func didTapdibsButton(sender: UIButton) {
+        delegate?.didTapHomeTitledibsButton(id: id!, isEnable: isEnabled, disEnable: disEnabled, buttonToogle: buttonUIToggle(dibsFlag:) )
     }
     
-    @objc private func didTabPlayButton(sender: UIButton) {
-        delegate?.didTabHomeTitlePlayButton()
+    @objc private func didTapPlayButton(sender: UIButton) {
+        delegate?.didTapHomeTitlePlayButton()
     }
     
-    @objc private func didTabInfoButton(sender: UIButton) {
-        delegate?.didTabHomeTitleContentButton()
+    @objc private func didTapInfoButton(sender: UIButton) {
+        delegate?.didTapHomeTitleContentButton()
+    }
+    
+    
+    //MARK: Button Touch 막기
+    func isEnabled() {
+        dibsButton.isEnabled = true
+        
+    }
+    
+    func disEnabled() {
+        dibsButton.isEnabled = false
+        
+    }
+    
+    func buttonUIToggle(dibsFlag: Bool) {
+        
+        if dibsFlag {
+            dibsButton.setImage(UIImage(systemName: "plus"), for: .normal)
+        } else {
+            dibsButton.setImage(UIImage(systemName: "checkmark"), for: .normal)
+            
+        }
     }
     
 }

@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import Kingfisher
 
 class PreviewCollectionViewCell: UICollectionViewCell {
     static let identifier = "PreviewCVC"
@@ -32,7 +33,7 @@ class PreviewCollectionViewCell: UICollectionViewCell {
         let posterImageRound: CGFloat = contentView.frame.width / 2
         
         
-        posterImage.layer.borderColor = UIColor.setNetfilxColor(name: .netflixRed).cgColor
+        posterImage.layer.borderColor = #colorLiteral(red: 0.8588235294, green: 0, blue: 0, alpha: 1)//UIColor.setNetfilxColor(name: .netflixRed).cgColor
         posterImage.layer.borderWidth = 3
         posterImage.layer.cornerRadius = posterImageRound
 
@@ -45,6 +46,8 @@ class PreviewCollectionViewCell: UICollectionViewCell {
         
         contentView.addSubview(titleImage)
     }
+    
+    
     
     private func setConstraints() {
         let yMargin: CGFloat = .dynamicYMargin(margin: 4)
@@ -65,7 +68,6 @@ class PreviewCollectionViewCell: UICollectionViewCell {
         
         titleImage.snp.makeConstraints {
             $0.centerY.equalTo(posterImage.snp.bottom)
-//            $0.centerX.equalToSuperview()
             $0.centerX.equalTo(posterImage.snp.centerX)
             $0.height.equalTo(titleImageHeight)
             $0.width.equalTo(titleImageWidth)
@@ -77,15 +79,12 @@ class PreviewCollectionViewCell: UICollectionViewCell {
     //MARK: - Gradient (그라데이션)
     override func layoutSubviews() {
         super.layoutSubviews()
-        
         gradient.startPoint = CGPoint(x: 1, y: 1)
-//        gradient.endPoint = CGPoint(x: 1, y: 0.6)
-        gradient.endPoint = CGPoint(x: 1, y: 0.3)
+        gradient.endPoint = CGPoint(x: 1, y: 0.5)
         
         gradient.colors = [
-            #colorLiteral(red: 0, green: 0, blue: 0, alpha: 0.7999785959).cgColor,
+            #colorLiteral(red: 0.07841768116, green: 0.07843924314, blue: 0.07841629535, alpha: 1).cgColor,
             #colorLiteral(red: 0, green: 0, blue: 0, alpha: 0).cgColor
-
         ]
         gradient.locations = [0,1]
         gradient.frame = CGRect(origin: .zero, size: frame.size)
@@ -94,9 +93,13 @@ class PreviewCollectionViewCell: UICollectionViewCell {
     }
     
     //MARK: - Configure
-    func configure(color: UIColor, poster: UIImage, title: UIImage) {
-        self.posterImage.image = poster
-        self.titleImage.image = title
+    func configure(color: UIColor, poster: String, title: String) {
+    
+        self.posterImage.kf.setImage(with: URL(string: poster))
+        self.titleImage.kf.setImage(with: URL(string: title))
+        
     }
+    
+    
     
 }

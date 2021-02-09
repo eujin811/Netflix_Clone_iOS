@@ -38,9 +38,10 @@ class DeleteProfileButtonView: UIView {
         deleteButton.addTarget(self, action: #selector(didTapDeleteButton), for: .touchUpInside)
         deleteButton.contentMode = .scaleAspectFill
         deleteButton.backgroundColor = .setNetfilxColor(name: .black)
-        deleteButton.setTitle("  삭제", for: .normal)
+        deleteButton.setTitle(" 삭제", for: .normal)
         deleteButton.tintColor = .setNetfilxColor(name: .white)
-        deleteButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        deleteButton.titleLabel?.font = UIFont.dynamicFont(fontSize: 13, weight: .bold)
+        
         
         
     }
@@ -50,7 +51,7 @@ class DeleteProfileButtonView: UIView {
         [deleteButton].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
-        deleteButton.topAnchor.constraint(equalTo: self.topAnchor, constant: margin * 2).isActive = true
+        deleteButton.topAnchor.constraint(equalTo: self.topAnchor, constant: margin).isActive = true
         deleteButton.centerXAnchor.constraint(equalTo: self.centerXAnchor).isActive = true
         deleteButton.widthAnchor.constraint(greaterThanOrEqualToConstant: margin / 2).isActive = true
 

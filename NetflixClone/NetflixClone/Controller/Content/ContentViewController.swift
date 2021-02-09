@@ -8,49 +8,79 @@
 
 import UIKit
 
-class ContentViewController: UIViewController {
+class ContentViewController: CanSaveViewController {
     
     private let bluredBackgroundView = BluredBackgroundView()
     private let contentTableView = UITableView()
     
     private var contentId: Int
     private var content: ContentDetail?
-    private var similarContets: [SimilarContent] = []
+    private var similarContents: [SimilarContent] = []
     
-    // 수정 후 사용
-        init(id: Int = 3) {
-            self.contentId = id
-            super.init(nibName: nil, bundle: nil)
-        }
+    init(id: Int = 3) {
+        self.contentId = id
+        super.init(nibName: nil, bundle: nil)
+    }
     
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        request(id: self.contentId)
+        setNavigation()
+        request(id: contentId)
         setUI()
         setConstraints()
     }
     
+    private func setNavigation() {
+        // NavigationBar 투명하게 설정
+        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
+        self.navigationController?.navigationBar.shadowImage = UIImage()
+        self.navigationController?.navigationBar.isTranslucent = true
+        self.navigationController?.view.backgroundColor = UIColor.clear
+        
+        let dismiss = UIButton(frame: CGRect(x: 0, y: 0, width: CGFloat.dynamicXMargin(margin: 5), height: CGFloat.dynamicXMargin(margin: 5)))
+        dismiss.setImage(UIImage(named: "close"), for: .normal)
+        dismiss.tintColor = .black
+        dismiss.addTarget(self, action: #selector(didTapDismissButton(_:)), for: .touchUpInside)
+        let dismissButton = UIBarButtonItem(customView: dismiss)
+        
+        if navigationController?.viewControllers.first != self {
+            let backButton = UIBarButtonItem(image: UIImage(named: "백"), style: .plain, target: self, action: #selector(backButtonDidTap))
+            backButton.tintColor = .setNetfilxColor(name: .white)
+            navigationItem.leftBarButtonItem = backButton
+        }
+        
+        navigationItem.rightBarButtonItem = dismissButton
+        
+    }
+    
+    @objc private func didTapDismissButton(_ sender: UIButton) {
+        dismiss(animated: true)
+    }
+    
+    @objc func backButtonDidTap() {
+        navigationController?.popViewController(animated: true)
+    }
+    
     // MARK: 서버에 요청해서 데이터 받음
     private func request(id: Int) {
-        guard let url = APIURL.defaultURL.makeURL(
-            pathItems: [PathItem(name: "profiles", value: "\(LoginStatus.shared.getProfileID() ?? 1)"), // 프로필 아이디 => 수정 할 것
+        guard let profileID = LoginStatus.shared.getProfileID(), let url = APIURL.defaultURL.makeURL(
+            pathItems: [PathItem(name: "profiles", value: "\(profileID)"),
                         PathItem(name: "contents", value: "\(id)")]), // 컨텐츠 아이디
             let token = LoginStatus.shared.getToken()
             else { return }
         APIManager().request(url: url, method: .get, token: token) { (result) in
             switch result {
             case .success(let data):
-//                print(String(data: data, encoding: .utf8)!)
                 if let contentModel = try? JSONDecoder().decode(ContentModel.self, from: data) {
                     self.content = contentModel.content
-                    self.similarContets = contentModel.similarContents
+                    self.similarContents = contentModel.similarContents
                     self.contentTableView.reloadData()
                     self.bluredBackgroundView.configure(backgroundImage: contentModel.content.contentsImage)
-//                    print(contentModel.content.videoURL)
+                    
                 }
             case .failure(let error):
                 print(error.localizedDescription)
@@ -66,11 +96,12 @@ class ContentViewController: UIViewController {
         contentTableView.contentInsetAdjustmentBehavior = .never
         contentTableView.backgroundView = bluredBackgroundView
         contentTableView.allowsSelection = false
+        contentTableView.showsVerticalScrollIndicator = false
         
         contentTableView.register(PosterTableViewCell.self, forCellReuseIdentifier: PosterTableViewCell.identifier)
         contentTableView.register(SummaryTableViewCell.self, forCellReuseIdentifier: SummaryTableViewCell.identifier)
         contentTableView.register(StaffTableViewCell.self, forCellReuseIdentifier: StaffTableViewCell.identifier)
-//        contentTableView.register(ButtonsTableViewCell.self, forCellReuseIdentifier: ButtonsTableViewCell.identifier)
+        //        contentTableView.register(ButtonsTableViewCell.self, forCellReuseIdentifier: ButtonsTableViewCell.identifier)
         contentTableView.register(RecommendedTableViewCell.self, forCellReuseIdentifier: RecommendedTableViewCell.identifier)
     }
     
@@ -79,6 +110,7 @@ class ContentViewController: UIViewController {
             $0.leading.trailing.top.bottom.equalTo(view)
         }
     }
+    
 }
 
 extension ContentViewController: UITableViewDelegate, UITableViewDataSource {
@@ -120,15 +152,17 @@ extension ContentViewController: UITableViewDelegate, UITableViewDataSource {
             
             if let content = self.content {
                 returnCell.configure(dibsButtonClicked: content.isSelected, likeButtonClicked: content.isLike)
+                
+                print("ContentController:", contentId)
             }
-            
+            returnCell.saveControl = self
             returnCell.delegate = self
             return returnCell
         } else {
             let cell = tableView.dequeueReusableCell(withIdentifier: RecommendedTableViewCell.identifier, for: indexPath) as! RecommendedTableViewCell 
-                cell.delegate = self
-                cell.configure(contents: similarContets)
-                return cell
+            cell.delegate = self
+            cell.configure(contents: similarContents)
+            return cell
             
         }
     }
@@ -150,14 +184,11 @@ extension ContentViewController: UITableViewDelegate, UITableViewDataSource {
             return CGFloat.dynamicYMargin(margin: 70)
         } else {
             // recommend
-            return CGFloat.dynamicYMargin(margin: height * 0.5)
+            return height * 0.5
         }
     }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        
-        //        print(scrollView.contentOffset.y)
-        //        print(bluredBackgroundView.blackView.alpha)
         let height = (scrollView.contentSize.height) * 0.1
         
         if (scrollView.contentOffset.y >= 0 && scrollView.contentOffset.y <= height) {
@@ -171,15 +202,19 @@ extension ContentViewController: UITableViewDelegate, UITableViewDataSource {
 }
 
 extension ContentViewController: RecommendedCellDalegate {
-    func didTapRecommendedContents() {
-        // MARK: 서버로부터 컨텐츠 아이디 값 받아서 present 할 것
+    func didTapRecommendedContents(indexPath: IndexPath) {
         
-        print("해당 컨텐츠 상세화면으로 이동 할 것")
+        let contentVC = ContentViewController(id: similarContents[indexPath.row].id)
+        navigationController?.pushViewController(contentVC, animated: true)
         
     }
 }
 
-extension ContentViewController: DismissDelegate {
+extension ContentViewController: PlayDelegate {
+    func play() {
+        presentVideoController(contentID: contentId)
+    }
+    
     func dismiss() {
         presentingViewController?.dismiss(animated: true)
     }
@@ -187,23 +222,8 @@ extension ContentViewController: DismissDelegate {
 
 extension ContentViewController: IsClickedProtocol {
     
-    func saveAction(status: SaveContentStatus) {
-        
-        switch status {
-        case .doseNotSave:
-            break
-        case .saved:
-            break
-        case .waiting:
-            break
-        case .downLoading:
-            break
-        }
-    }
-    
-    
     func dibButtonIsCliked() {
-        guard let url = URL(string: "https://www.netflexx.ga/\(LoginStatus.shared.getProfileID() ?? 1)/contents/\(self.contentId)/select/"),
+        guard let profileID = LoginStatus.shared.getProfileID(), let url = URL(string: "https://netflexx.ga/profiles/\(profileID)/contents/\(contentId)/select/"),
             let token = LoginStatus.shared.getToken()
             else { return }
         APIManager().request(url: url, method: .get, token: token) { _ in }
@@ -211,10 +231,41 @@ extension ContentViewController: IsClickedProtocol {
     
     func likeButtonIsCliked() {
         // 애니메이션 설정하고, bool 상태 서버에서 받도록 수정
-        guard let url = URL(string: "https://www.netflexx.ga/profiles/\(LoginStatus.shared.getProfileID() ?? 1)/contents/\(self.contentId)/like/"),
+        guard let profileID = LoginStatus.shared.getProfileID(), let url = URL(string:
+            "https://www.netflexx.ga/profiles/\(profileID)/contents/\(contentId)/like/"),
             let token = LoginStatus.shared.getToken()
             else { return }
         APIManager().request(url: url, method: .get, token: token) { _ in }
     }
 }
 
+extension ContentViewController: SaveStatusContentControl {
+    
+    func control(status: SaveContentStatus) {
+        
+        switch status {
+        case .doseNotSave:
+            guard let content = self.content else { return }
+            guard let imageURL = URL.safetyURL(string: content.contentsImage) else { return }
+            //            guard let videoURL = URL.safetyURL(string: content.videoURL) else { return }
+            // 비디오 영상 용량이 커서 프리뷰로 테스트 대체함
+            guard let preview = content.previewVideo, let previewURL = URL.safetyURL(string: preview) else { return }
+            // 테스트 끝나면 비디오 URL로 변경 예정
+            
+            let saveContent = SaveContent(
+                contentID: content.id,
+                title: content.contentsTitle,
+                rating: content.contentsRating,
+                summary: content.contentsSummay,
+                imageURL: imageURL,
+                videoURL: previewURL,
+                status: .waiting)
+            saveContentControl(status: status, saveContetnt: saveContent)
+        default:
+            guard let saveContent = SavedContentsListModel.shared.getContent(contentID: contentId) else { return }
+            saveContentControl(status: status, saveContetnt: saveContent)
+        }
+        
+    }
+    
+}

@@ -8,34 +8,65 @@
 
 import UIKit
 import AVFoundation
+import AVKit
 
 class PreviewView: UIView {
     
+    // MARK - 
+    private let asset: AVAsset
     var player: AVPlayer
     var playerLayer: AVPlayerLayer
+    var durationTime: Float64
+    
+    private var backgroundImage = UIImageView()
+    private let blurEffect = UIBlurEffect(style: UIBlurEffect.Style.dark)
+    lazy var blurEffectView = UIVisualEffectView(effect: blurEffect)
     
     init(url: URL) {
-        print(url)
-        self.player = AVPlayer(url: url)
+        self.asset = AVAsset(url: url)
+        let playerItem = AVPlayerItem(asset: asset)
+        
+        let duration = asset.duration
+        self.durationTime = CMTimeGetSeconds(duration)
+        
+        self.player = AVPlayer(playerItem: playerItem)
         self.playerLayer = AVPlayerLayer(player: self.player)
         super.init(frame: .zero)
+        
         playerLayer.videoGravity = .resizeAspectFill
-
-        setUI()
-        setContraints()
+        
+        setBlurredBackground()
+        
+        
+        print("duration Time: ", self.durationTime)
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
+    deinit {
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
+        print(#function)
+    }
+    
+    
     override func layoutSubviews() {
         super.layoutSubviews()
         setVideo()
     }
     
-    private func setUI() {
+    private func setBlurredBackground() {
+        self.addSubview(backgroundImage)
+        self.addSubview(blurEffectView)
         
+        backgroundImage.snp.makeConstraints {
+            $0.leading.trailing.top.bottom.equalToSuperview()
+        }
+        
+        blurEffectView.snp.makeConstraints {
+            $0.leading.trailing.top.bottom.equalTo(self)
+        }
     }
     
     private func setVideo() {
@@ -43,7 +74,9 @@ class PreviewView: UIView {
         self.layer.addSublayer(playerLayer)
     }
     
-    private func setContraints() {
-        
+    func configure(image: String) {
+        self.backgroundImage.kf.setImage(with: URL(string: image))
     }
 }
+
+

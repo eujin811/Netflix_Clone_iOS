@@ -45,10 +45,13 @@ class SavedContentsListView: UIView {
             addSubview($0)
         })
         
-        tableView.register(SavedContentCell.self, forCellReuseIdentifier: SavedContentCell.identifier)
-        
+//        tableView.register(SavedContentCell.self, forCellReuseIdentifier: SavedContentCell.identifier)
+        tableView.register(SavedContentHeaderView.self, forHeaderFooterViewReuseIdentifier: SavedContentHeaderView.identifire)
         tableView.backgroundColor = .setNetfilxColor(name: .black)
         tableView.separatorStyle = .none
+        
+        tableView.register(PresentFindStorableContentViewControllerButtonCell.self, forCellReuseIdentifier: PresentFindStorableContentViewControllerButtonCell.identifier)
+        
         
     }
     
@@ -65,6 +68,20 @@ class SavedContentsListView: UIView {
         })
     }
     
-    
+    func setEditingMode(isEditing: Bool) {
+        
+        
+        
+        UIView.animate(withDuration: 0.1, animations: { [weak self] in
+            guard let self = self else { return }
+
+            self.tableView.visibleCells.forEach({ cell in
+                if let cell = cell as? SavedContentCell {
+                    cell.setEditingMode(isEditing: isEditing)
+                }
+                self.layoutIfNeeded()
+            })
+        })
+    }
     
 }

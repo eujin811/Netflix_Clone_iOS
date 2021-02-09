@@ -10,7 +10,7 @@ import UIKit
 
 
 protocol LatestMovieTableViewCellDelegate: class {
-    func didTabLatestMovieCell(id: Int) -> ()
+    func didTapLatestMovieCell(id: Int) -> ()
 }
 
 
@@ -20,7 +20,7 @@ class LatestMovieTableViewCell: UITableViewCell {
     
     //MARK: data
     private var idData = [Int]()
-    private var posterData = [UIImage]()
+    private var posterData = [String]()
     
     weak var delegate: LatestMovieTableViewCellDelegate?
     
@@ -31,12 +31,11 @@ class LatestMovieTableViewCell: UITableViewCell {
     
     private let headerLabel = UILabel()
 
-    private let contentsCollectionView: UICollectionView = {
+    let contentsCollectionView: UICollectionView = {
             let layout = UICollectionViewFlowLayout()
             layout.scrollDirection = .horizontal
             return UICollectionView(frame: .zero, collectionViewLayout: layout)
         }()
-    
     
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -54,7 +53,6 @@ class LatestMovieTableViewCell: UITableViewCell {
     private func setUI() {
         let HeaderFont: UIFont = .boldSystemFont(ofSize: 16)
                 
-        headerLabel.text = "최신영화"
         headerLabel.font = HeaderFont
         headerLabel.backgroundColor = .clear
         headerLabel.textColor = UIColor.setNetfilxColor(name: UIColor.ColorAsset.white)
@@ -88,12 +86,11 @@ class LatestMovieTableViewCell: UITableViewCell {
     }
     
     
-    
     //MARK: -configure
-    func configure(id: [Int], poster: [UIImage]) {
+    func configure(id: [Int], poster: [String], cellTitle: String) {
         self.idData = id
         self.posterData = poster
-        print("Latest ----------> poster : \(poster)")
+        headerLabel.text = cellTitle//"최신영화"
         contentsCollectionView.reloadData()
     }
     
@@ -108,8 +105,8 @@ extension LatestMovieTableViewCell: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = contentsCollectionView.dequeueReusableCell(withReuseIdentifier: ContentsBasicItem.identifier, for: indexPath) as! ContentsBasicItem
         
-        cell.configure(poster: posterData[indexPath.row])
-        
+//        cell.configure(poster: posterData[indexPath.row])
+        cell.jinConfigure(urlString: posterData[indexPath.row])
         return cell
     }
     
@@ -118,6 +115,11 @@ extension LatestMovieTableViewCell: UICollectionViewDataSource {
 
 //MARK: -CollectionView FlowLayout Delegate
 extension LatestMovieTableViewCell: UICollectionViewDelegateFlowLayout {
+    
+//    func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+//        collectionView.reloadInputViews()
+////        collectionView.reloadData()   // error
+//    }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
 
@@ -130,17 +132,16 @@ extension LatestMovieTableViewCell: UICollectionViewDelegateFlowLayout {
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        print(frame)
-        let cellWidth = round(collectionView.frame.width / 3.5)
-        let cellHeight = round(collectionView.frame.height - (collectionViewFlow.lineSpacing * 2))
-        
-        
-        return CGSize(width: cellWidth, height: cellHeight)
+//
+//        let cellWidth = round(collectionView.frame.width / 3.5)
+//        let cellHeight = round(collectionView.frame.height - (collectionViewFlow.lineSpacing * 2))
+//        return CGSize(width: cellWidth, height: cellHeight)
+        return CGSize(width: 107, height: 168)
     }
     
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
-        delegate?.didTabLatestMovieCell(id: idData[indexPath.row])
+        delegate?.didTapLatestMovieCell(id: idData[indexPath.row])
     }
 }

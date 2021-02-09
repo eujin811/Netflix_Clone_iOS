@@ -9,6 +9,11 @@
 import UIKit
 import Kingfisher
 
+//enum ChangeRoots {
+//    case main
+//    case manager
+//}
+
 class ChangeProfileViewController: UIViewController {
     
     let addProfileView = AddProfileView()
@@ -16,6 +21,9 @@ class ChangeProfileViewController: UIViewController {
     private let universalCV = UniversalClassView()
     private let changeView = ChangeCustomView()
     private let deleteView = DeleteProfileButtonView()
+    
+    private var userProfileList = [ProfileList]()
+    private var userIconList = [ProfileIcons]()
     
     var isKids = Bool()
     var profileName = String()
@@ -34,9 +42,15 @@ class ChangeProfileViewController: UIViewController {
     }
     
     private func setNavigationBar() {
+        navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
+        navigationController?.navigationBar.shadowImage = UIImage()
+        navigationController?.navigationBar.isTranslucent = true
+        navigationController?.view.backgroundColor = UIColor.clear
+ 
+        navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.white, NSAttributedString.Key.font: UIFont.dynamicFont(fontSize: 15, weight: .regular)]
+        
         
         navigationItem.title = "프로필 변경"
-        navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor:UIColor.white]
         
         let cancelButton = UIBarButtonItem(title: "취소", style: .plain, target: self, action: #selector(didTapCancelButton(_:)))
         cancelButton.tintColor = .white
@@ -66,21 +80,25 @@ class ChangeProfileViewController: UIViewController {
     }
     private func setConstraints() {
         
+        
+        
         let guide = view.safeAreaLayoutGuide
         let margin: CGFloat = 10
         let padding: CGFloat = 20
         let spacing: CGFloat = 80
+        
         let inset = view.safeAreaInsets.top + view.safeAreaInsets.bottom
-        let topMargin: CGFloat = .dynamicYMargin(margin: (view.frame.height - inset) / 6)
+        let topMargin: CGFloat = .dynamicYMargin(margin: (view.frame.height - inset) / 5.5)
+       
         [addProfileView,changeView,kidsCV,universalCV,deleteView].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
         addProfileView.topAnchor.constraint(equalTo: guide.topAnchor, constant: topMargin).isActive = true
         addProfileView.leadingAnchor.constraint(equalTo: guide.leadingAnchor).isActive = true
         addProfileView.trailingAnchor.constraint(equalTo: guide.trailingAnchor).isActive = true
-        addProfileView.bottomAnchor.constraint(equalTo: guide.centerYAnchor).isActive = true
+        addProfileView.bottomAnchor.constraint(equalTo: guide.centerYAnchor, constant: padding).isActive = true
         
-        universalCV.topAnchor.constraint(equalTo: addProfileView.bottomAnchor, constant: margin).isActive = true
+        universalCV.topAnchor.constraint(equalTo: addProfileView.bottomAnchor).isActive = true
         universalCV.leadingAnchor.constraint(equalTo: guide.leadingAnchor).isActive = true
         universalCV.trailingAnchor.constraint(equalTo: guide.trailingAnchor).isActive = true
         universalCV.bottomAnchor.constraint(equalTo: addProfileView.bottomAnchor, constant: spacing + padding).isActive = true
@@ -90,7 +108,7 @@ class ChangeProfileViewController: UIViewController {
         kidsCV.trailingAnchor.constraint(equalTo: guide.trailingAnchor).isActive = true
         kidsCV.bottomAnchor.constraint(equalTo: addProfileView.bottomAnchor, constant: spacing + padding).isActive = true
         
-        changeView.topAnchor.constraint(equalTo: kidsCV.bottomAnchor, constant: margin).isActive = true
+        changeView.topAnchor.constraint(equalTo: kidsCV.bottomAnchor).isActive = true
         changeView.leadingAnchor.constraint(equalTo: guide.leadingAnchor).isActive = true
         changeView.trailingAnchor.constraint(equalTo: guide.trailingAnchor).isActive = true
         changeView.bottomAnchor.constraint(equalTo: kidsCV.bottomAnchor, constant: padding * 2 + margin).isActive = true
@@ -117,6 +135,7 @@ class ChangeProfileViewController: UIViewController {
     
     @objc private func didTapCancelButton(_ sender: Any) {
         print("프로필만들기취소")
+
         for vc in navigationController!.viewControllers.reversed() {
             if let profileVC = vc as? ProfileViewController {
                 profileVC.root = .manager
@@ -130,15 +149,14 @@ class ChangeProfileViewController: UIViewController {
     private func profileUpdate() {
         let stringID = String(userID)
         let bodys: [String: Any] = ["profile_name": profileName, "profile_icon": profileIconNum, "is_kids": isKids]
+        print(bodys)
         guard let jsonToDO = try? JSONSerialization.data(withJSONObject: bodys) else { return }
         dump(bodys)
         guard
             let token = LoginStatus.shared.getToken(),
             let url = APIURL.makeProfile.makeURL(pathItems: [PathItem(name: stringID, value: nil)])
             else { return }
-        
-        print(url)
-        
+    
         var urlRequest = URLRequest(url: url)
         urlRequest.addValue("TOKEN " + token, forHTTPHeaderField: "Authorization")
         urlRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -185,17 +203,24 @@ class ChangeProfileViewController: UIViewController {
     
     
     @objc private func didTapSaveButton() {
-        
-        guard let userName = addProfileView.nickNameTextfield.text, !userName.isEmpty else { return }
-        profileName = userName
+
+        if let userName = addProfileView.nickNameTextfield.text {
+            profileName = userName.isEmpty ? profileName: userName
+        }
+
         
         for vc in navigationController!.viewControllers.reversed() {
             if let profileVC = vc as? ProfileViewController {
-                profileVC.root = .main
+                profileVC.root = .manager
                 profileUpdate()
-                navigationController?.popViewController(animated: true)
                 print("프로필수정 오케이")
+                navigationController?.popViewController(animated: true)
+            } else {
+//                profileUpdate()
+//                print("프로필관리프렌젠트?")
+//                navigationController?.popViewController(animated: true)
             }
+            
         }
     }
 }
@@ -214,7 +239,7 @@ extension ChangeProfileViewController: AddProfileViewDelegate, DeleteProfileButt
             if let profileVC = vc as? ProfileViewController {
                 profileVC.root = .main
                 profileDelete()
-                profileVC.userNameArray.removeAll()
+                profileVC.userProfileList.removeAll()
                 navigationController?.popViewController(animated: true)
                 
                 print("프로필삭제")
@@ -227,6 +252,7 @@ extension ChangeProfileViewController: ProfileImageViewControllerDelegate {
     func setImage(image: UIImage, imageID: Int) {
         addProfileView.newProfileButton.setImage(image, for: .normal)
         self.profileIconNum = imageID
+        
     }
 }
 extension ChangeProfileViewController: UITextFieldDelegate {

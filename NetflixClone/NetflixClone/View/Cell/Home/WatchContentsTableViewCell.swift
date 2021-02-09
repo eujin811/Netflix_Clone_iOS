@@ -9,8 +9,8 @@
 import UIKit
 
 protocol WatchContentsTableViewDelegate: class {
-    func didTabWatchContentPlay() -> ()
-    func didTabWatchContentInfo(contentId: Int) -> ()
+    func didTapWatchContentPlay(contentID: Int) -> ()
+    func didTapWatchContentInfo(contentId: Int) -> ()
 }
 
 class WatchContentsTableViewCell: UITableViewCell {
@@ -23,9 +23,9 @@ class WatchContentsTableViewCell: UITableViewCell {
     
     private let headerLabel = UILabel()
     
-    private var idData = [Int]()
+//    private var idData = [Int]()
     private var contentIdData = [Int]()
-    private var postersData = [UIImage]()
+    private var postersData = [URL]()
     private var watchTimesData = [Int]()
     private var playMarksData = [Int]()
     private var url = [URL]()
@@ -89,9 +89,9 @@ class WatchContentsTableViewCell: UITableViewCell {
     }
     
     //MARK: - configure
-    func configure(id: [Int], poster: [UIImage], watchTime: [Int], playMark: [Int], contentID: [Int] /*url: URL*/) {
+    func configure(/*id: [Int], */poster: [URL], watchTime: [Int], playMark: [Int], contentID: [Int]) {
 
-        self.idData = id
+//        self.idData = id
         self.contentIdData = contentID
         self.postersData = poster
         self.watchTimesData = watchTime
@@ -104,15 +104,21 @@ class WatchContentsTableViewCell: UITableViewCell {
 
 //MARK: -FlowLayout Delegate
 extension WatchContentsTableViewCell: UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        collectionView.reloadInputViews()
+    }
+    
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
         let inset: CGFloat = 5
         return UIEdgeInsets(top: 0, left: inset, bottom: inset, right: inset)
     }
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width: CGFloat = collectionView.frame.width / 3.5
-        let height: CGFloat = collectionView.frame.height - 20
+//        let width: CGFloat = collectionView.frame.width / 3.5
+//        let height: CGFloat = collectionView.frame.height - 20
+//        return CGSize(width: width, height: height)
+        
+        return CGSize(width: 107, height: 199)
 
-        return CGSize(width: width, height: height)
     }
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
         return 10
@@ -145,11 +151,10 @@ extension WatchContentsTableViewCell: UICollectionViewDataSource {
             watchString = "\(hour)시간 \(minute)분"
         }
         // playMark -> Double Type 퍼센트로
-        let playMark = Double(playMarksData[indexPath.row])
+        let playMarkData = Double(playMarksData[indexPath.row])
+        let playLength: Double = ( 100 / ( Double(watchTime) / playMarkData ) ) / 100
         
-        
-        print("WatchTableViewCell: watchString \(watchString), ")
-        cell.configure(id: idData[indexPath.row], contentId: contentIdData[indexPath.row],poster: postersData[indexPath.row], watchTime: watchString, playMark: 0.5)
+        cell.configure(/*id: idData[indexPath.row], */contentId: contentIdData[indexPath.row],poster: postersData[indexPath.row], watchTime: watchString, playMark: playLength)
         
         return cell
     }
@@ -158,12 +163,13 @@ extension WatchContentsTableViewCell: UICollectionViewDataSource {
 }
 
 extension WatchContentsTableViewCell: WatchContentsCollectionViewCellDelegate {
-    func didTabWatchContentInfo(contentId: Int) {
-        delegate?.didTabWatchContentInfo(contentId: contentId)
+    func didTapWatchPlay(contentID: Int) {
+                delegate?.didTapWatchContentPlay(contentID: contentID)
     }
     
-    func didTabWatchPlay() {
-        delegate?.didTabWatchContentPlay()
+    func didTapWatchContentInfo(contentId: Int) {
+        delegate?.didTapWatchContentInfo(contentId: contentId)
     }
+
     
 }
